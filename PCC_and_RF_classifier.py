@@ -191,14 +191,6 @@ grid_search_svm = GridSearchCV(SVC(probability=True, random_state=42), param_gri
 grid_search_svm.fit(X_train, y_train)
 
 
-# Hyperparameter tuning for AdaBoost
-param_grid_ada = {
-    'n_estimators': [50, 100, 200],
-    'learning_rate': [0.01, 0.1, 1]
-}
-grid_search_ada = GridSearchCV(AdaBoostClassifier(random_state=42), param_grid_ada, cv=10, n_jobs=-1, verbose=2)
-grid_search_ada.fit(X_train, y_train)
-
 
 def evaluate_model(model, X_train, y_train, X_test, y_test):
     # Training predictions and probabilities
@@ -255,30 +247,6 @@ results_test_df = pd.DataFrame({
 })
 
 # Display the results
-
-import shap
-
-# Assuming 'best_rf' is your trained Random Forest model
-# and 'X_train' is your training dataset
-
-# Calculate SHAP values
-explainer = shap.TreeExplainer(best_rf)
-shap_values = explainer.shap_values(X_train)
-
-# Summarize the SHAP values for each feature to get the mean absolute value
-shap_sum = np.abs(shap_values[0]).mean(axis=0)
-importance_df = pd.DataFrame([X_train.columns.tolist(), shap_sum.tolist()]).T
-importance_df.columns = ['Feature', 'SHAP Importance']
-importance_df = importance_df.sort_values('SHAP Importance', ascending=False)
-
-# Get top 5 features
-top_features = importance_df.head(5)['Feature'].values
-
-# Filter SHAP values for top 5 features
-top_shap_values = shap_values[0][:, [X_train.columns.get_loc(feature) for feature in top_features]]
-
-# Create SHAP summary plot for top 5 features
-shap.summary_plot(top_shap_values, features=X_train[top_features], feature_names=top_features)
 
 y_pred_svm = grid_search_svm.best_estimator_.predict(X_test)
 y_prob_svm = grid_search_svm.best_estimator_.predict_proba(X_test)[:, 1]
